@@ -28,14 +28,27 @@ def draw_rectangle(event, x, y, flags, params):
 def process_rectangle(top_left, bottom_right):
     global img
     (x0, y0), (x1, y1) = top_left, bottom_right
-    # blur effect
     image_roi = img[y0:y1, x0:x1]
+
+    # blur effect
     if image_roi.any():
         image_roi = cv2.medianBlur(image_roi, 33)
         img[y0:y1, x0:x1] = image_roi
 
+    # cartoonize
+    if image_roi.any():
+        image_original = image_roi.copy()
+        img_gray = cv2.cvtColor(image_roi, cv2.COLOR_BGR2GRAY)
+        img_gray = cv2.medianBlur(img_gray, 1)  # blur
+        edges = cv2.Laplacian(img_gray, cv2.CV_8U, ksize=7)
+        ret, mask = cv2.threshold(edges, 20, 255, cv2.THRESH_BINARY_INV)  # mask is the cartoon
+        image_roi = cv2.cvtColor(mask, cv2.COLOR_GRAY2BGR)
+        # image_roi = cv2.bitwise_and(image_original, image_roi)
+        img[y0:y1, x0:x1] = image_roi
+
+
     # negative film effect
-    img[y0:y1, x0:x1] = 255 - img[y0:y1, x0:x1]
+    # img[y0:y1, x0:x1] = 255 - img[y0:y1, x0:x1]
 
 
 if __name__ == '__main__':
